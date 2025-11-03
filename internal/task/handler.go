@@ -45,6 +45,17 @@ func (h *Handler) GetTask(w http.ResponseWriter, r *http.Request) {
 // UpdateTask handles PUT /tasks/{id}
 func (h *Handler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/tasks/")
+	currentUser := r.Header.Get("X-User-ID")
+
+	existing, err := h.service.GetTask(id)
+	if err != nil {
+		http.Error(w, "task not found", http.StatusNotFound)
+		return
+	}
+	if existing.OwnerID != currentUser {
+		http.Error(w, "forbidden: not the owner of this task", http.StatusForbidden)
+		return
+	}
 	var body struct {
 		Description string `json:"Description"`
 		IsCompleted bool   `json:"is_completed"`
@@ -64,7 +75,18 @@ func (h *Handler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 // DeleteTask handles DELETE /tasks/{id}
 func (h *Handler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/tasks/")
-	err := h.service.DeleteTask(id)
+	currentUser := r.Header.Get("X-User-ID")
+
+	existing, err := h.service.GetTask(id)
+	if err != nil {
+		http.Error(w, "task not found", http.StatusNotFound)
+		return
+	}
+	if existing.OwnerID != currentUser {
+		http.Error(w, "forbidden: not the owner of this task", http.StatusForbidden)
+		return
+	}
+	err = h.service.DeleteTask(id)
 	if err != nil {
 		http.Error(w, "task not found", http.StatusNotFound)
 		return
