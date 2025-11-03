@@ -8,21 +8,21 @@ import (
 	"github.com/diveshsaini1001/go-task-manager/internal/task"
 )
 
-func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "OK")
-}
-
 func main() {
+	repo := task.NewTaskRepository()
+	service := task.NewTaskService(repo)
+	handler := task.NewHandler(service)
+
 	mux := http.NewServeMux()
 
-	// Health check
-	mux.HandleFunc("/health", healthCheckHandler)
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
+	})
 
-	// Task routes
 	mux.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
-			task.CreateTask(w, r)
+			handler.CreateTask(w, r)
 			return
 		}
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -31,11 +31,11 @@ func main() {
 	mux.HandleFunc("/tasks/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			task.GetTask(w, r)
+			handler.GetTask(w, r)
 		case http.MethodPut:
-			task.UpdateTask(w, r)
+			handler.UpdateTask(w, r)
 		case http.MethodDelete:
-			task.DeleteTask(w, r)
+			handler.DeleteTask(w, r)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
@@ -43,5 +43,4 @@ func main() {
 
 	fmt.Println("Server running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
-
 }
