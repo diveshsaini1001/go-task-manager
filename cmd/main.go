@@ -5,13 +5,15 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/diveshsaini1001/go-task-manager/internal/logger"
 	"github.com/diveshsaini1001/go-task-manager/internal/task"
 )
 
 func main() {
 	repo := task.NewTaskRepository()
 	service := task.NewTaskService(repo)
-	handler := task.NewHandler(service)
+	appLogger := logger.NewLogger()
+	handler := task.NewHandler(service, appLogger)
 
 	mux := http.NewServeMux()
 
