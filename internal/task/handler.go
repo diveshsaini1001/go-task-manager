@@ -115,5 +115,6 @@ func (h *Handler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.logger.Info("Task deleted: " + id + " by " + currentUser)
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("DONE")
 }
